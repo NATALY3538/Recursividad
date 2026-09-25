@@ -1,139 +1,74 @@
-using System;
 using System.Globalization;
 using System.Numerics;
+using System.Windows.Forms;
 
-namespace Practica_03_MCD
+namespace Practica_03_MCD;
+
+internal static class Program
 {
-    public class Program
+    [STAThread]
+    private static void Main()
     {
-        public static void Main(string[] args)
+        ApplicationConfiguration.Initialize();
+        Application.Run(new MainForm());
+    }
+}
+
+public sealed class MainForm : Form
+{
+    private readonly TextBox entradaA = new() { Width = 220 };
+    private readonly TextBox entradaB = new() { Width = 220 };
+    private readonly TextBox resultado = new()
+    {
+        Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical,
+        Dock = DockStyle.Fill, Font = new Font("Consolas", 12)
+    };
+
+    public MainForm()
+    {
+        Text = "Práctica 3 - Máximo común divisor";
+        MinimumSize = new Size(650, 420);
+        Size = new Size(850, 580);
+        StartPosition = FormStartPosition.CenterScreen;
+
+        var panel = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20), ColumnCount = 2, RowCount = 5 };
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        for (int i = 0; i < 4; i++) panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+        var titulo = new Label { Text = "MCD mediante Euclides recursivo", AutoSize = true, Font = new Font("Segoe UI", 17, FontStyle.Bold), Margin = new Padding(0, 0, 0, 18) };
+        panel.Controls.Add(titulo, 0, 0);
+        panel.SetColumnSpan(titulo, 2);
+        panel.Controls.Add(new Label { Text = "Primer número entero:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 1);
+        panel.Controls.Add(entradaA, 1, 1);
+        panel.Controls.Add(new Label { Text = "Segundo número entero:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 2);
+        panel.Controls.Add(entradaB, 1, 2);
+        var calcular = new CupertinoButton { Text = "Calcular MCD", AutoSize = true, Margin = new Padding(0, 16, 0, 16) };
+        calcular.Click += Calcular;
+        panel.Controls.Add(calcular, 0, 3);
+        panel.SetColumnSpan(calcular, 2);
+        panel.Controls.Add(resultado, 0, 4);
+        panel.SetColumnSpan(resultado, 2);
+        Controls.Add(panel);
+        CupertinoTheme.Aplicar(this, "\ue9ef"); // Material Symbols: tag
+        AcceptButton = calcular;
+    }
+
+    private void Calcular(object? sender, EventArgs e)
+    {
+        if (!BigInteger.TryParse(entradaA.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var a)
+            || !BigInteger.TryParse(entradaB.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var b))
         {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-            if (args.Length >= 2)
-            {
-                ProcesarEntrada(args[0], args[1]);
-                return;
-            }
-
-            Console.WriteLine("==================================================");
-            Console.WriteLine("  PRÁCTICA 3: MÁXIMO COMÚN DIVISOR (RECURSIVO)    ");
-            Console.WriteLine("==================================================");
-            Console.WriteLine("Calcula el MCD de dos números enteros mediante el algoritmo de Euclides.");
-            Console.WriteLine("Se admiten números positivos, negativos y cero. (0, 0) no está definido.");
-            Console.WriteLine();
-
-            bool continuar = true;
-            while (continuar)
-            {
-                BigInteger a = SolicitarEntero("Ingrese el primer número entero (a): ");
-                BigInteger b = SolicitarEntero("Ingrese el segundo número entero (b): ");
-
-                if (a.IsZero && b.IsZero)
-                {
-                    Console.WriteLine("\nError: El MCD(0, 0) no está definido matemáticamente.");
-                    Console.WriteLine("Por favor, ingrese valores válidos donde al menos uno no sea cero.\n");
-                    continue;
-                }
-
-                try
-                {
-                    BigInteger mcd = McdRecursivo.Calcular(a, b);
-                    Console.WriteLine("\n--- Resultado ---");
-                    Console.WriteLine($"Números ingresados: a = {a}, b = {b}");
-                    Console.WriteLine($"MCD({a}, {b}) = {mcd}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error al calcular: {ex.Message}");
-                }
-
-                Console.Write("\n¿Desea calcular otro MCD? (s/n): ");
-                string? resp = Console.ReadLine();
-                if (resp == null || !resp.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
-                {
-                    continuar = false;
-                }
-                Console.WriteLine();
-            }
-
-            Console.WriteLine("Programa finalizado. ¡Hasta luego!");
+            MessageBox.Show(this, "Ingresa dos números enteros válidos.", "Entrada inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+        if (a.IsZero && b.IsZero)
+        {
+            MessageBox.Show(this, "El MCD de 0 y 0 no está definido.", "Entrada inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
         }
 
-        private static BigInteger SolicitarEntero(string prompt)
-        {
-            while (true)
-            {
-                Console.Write(prompt);
-                string? input = Console.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(input))
-                {
-                    Console.WriteLine("Error: La entrada no puede estar vacía. Intente de nuevo.");
-                    continue;
-                }
-
-                if (input.Contains('.') || input.Contains(',') || input.Contains('/'))
-                {
-                    Console.WriteLine("Error: No se admiten fracciones ni decimales. Ingrese un número entero.");
-                    continue;
-                }
-
-                if (BigInteger.TryParse(input.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out BigInteger valor))
-                {
-                    return valor;
-                }
-
-                Console.WriteLine("Error: La entrada no es un número entero válido. Intente de nuevo.");
-            }
-        }
-
-        public static bool ValidarYCalcular(string inputA, string inputB, out BigInteger resultado)
-        {
-            resultado = BigInteger.Zero;
-
-            if (inputA.Contains('.') || inputA.Contains(',') || inputA.Contains('/') ||
-                inputB.Contains('.') || inputB.Contains(',') || inputB.Contains('/'))
-            {
-                Console.WriteLine("Error: No se admiten fracciones ni decimales. Ambos deben ser enteros.");
-                return false;
-            }
-
-            if (!BigInteger.TryParse(inputA.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out BigInteger a))
-            {
-                Console.WriteLine($"Error: '{inputA}' no es un número entero válido.");
-                return false;
-            }
-
-            if (!BigInteger.TryParse(inputB.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out BigInteger b))
-            {
-                Console.WriteLine($"Error: '{inputB}' no es un número entero válido.");
-                return false;
-            }
-
-            if (a.IsZero && b.IsZero)
-            {
-                Console.WriteLine("Error: El MCD(0, 0) no está definido. Ambos valores no pueden ser cero simultáneamente.");
-                return false;
-            }
-
-            try
-            {
-                resultado = McdRecursivo.Calcular(a, b);
-                Console.WriteLine($"Números ingresados: a = {a}, b = {b}");
-                Console.WriteLine($"MCD({a}, {b}) = {resultado}");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                return false;
-            }
-        }
-
-        private static void ProcesarEntrada(string inputA, string inputB)
-        {
-            ValidarYCalcular(inputA, inputB, out _);
-        }
+        resultado.Text = $"MCD({a}, {b}) = {McdRecursivo.Calcular(a, b)}";
     }
 }

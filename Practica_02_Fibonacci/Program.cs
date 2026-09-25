@@ -1,113 +1,69 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Numerics;
+using System.Windows.Forms;
 
-namespace Practica_02_Fibonacci
+namespace Practica_02_Fibonacci;
+
+internal static class Program
 {
-    public class Program
+    [STAThread]
+    private static void Main()
     {
-        public static void Main(string[] args)
+        ApplicationConfiguration.Initialize();
+        Application.Run(new MainForm());
+    }
+}
+
+public sealed class MainForm : Form
+{
+    private readonly TextBox entrada = new() { Width = 180 };
+    private readonly TextBox resultado = new()
+    {
+        Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Both,
+        Dock = DockStyle.Fill, Font = new Font("Consolas", 11), WordWrap = true
+    };
+
+    public MainForm()
+    {
+        Text = "Práctica 2 - Serie de Fibonacci";
+        MinimumSize = new Size(700, 430);
+        Size = new Size(850, 580);
+        StartPosition = FormStartPosition.CenterScreen;
+
+        var panel = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20), ColumnCount = 2, RowCount = 4 };
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        for (int i = 0; i < 3; i++) panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+        var titulo = new Label { Text = "Serie de Fibonacci recursiva", AutoSize = true, Font = new Font("Segoe UI", 17, FontStyle.Bold), Margin = new Padding(0, 0, 0, 18) };
+        panel.Controls.Add(titulo, 0, 0);
+        panel.SetColumnSpan(titulo, 2);
+        panel.Controls.Add(new Label { Text = $"Cantidad de términos (0 a {FibonacciRecursivo.MaxLimiteTerminos}):", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 1);
+        panel.Controls.Add(entrada, 1, 1);
+        var generar = new CupertinoButton { Text = "Generar serie", AutoSize = true, Margin = new Padding(0, 16, 0, 16) };
+        generar.Click += Generar;
+        panel.Controls.Add(generar, 0, 2);
+        panel.SetColumnSpan(generar, 2);
+        panel.Controls.Add(resultado, 0, 3);
+        panel.SetColumnSpan(resultado, 2);
+        Controls.Add(panel);
+        CupertinoTheme.Aplicar(this, "\ue24a"); // Material Symbols: functions
+        AcceptButton = generar;
+    }
+
+    private void Generar(object? sender, EventArgs e)
+    {
+        if (!int.TryParse(entrada.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int n)
+            || n < 0 || n > FibonacciRecursivo.MaxLimiteTerminos)
         {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-            if (args.Length > 0)
-            {
-                ProcesarEntrada(args[0]);
-                return;
-            }
-
-            Console.WriteLine("==================================================");
-            Console.WriteLine("  PRÁCTICA 2: SERIE DE FIBONACCI (RECURSIVA)      ");
-            Console.WriteLine("==================================================");
-            Console.WriteLine("Genera los primeros n términos de la serie con recursividad.");
-            Console.WriteLine($"Convención: F(0) = 0, F(1) = 1. Límite seguro: n <= {FibonacciRecursivo.MaxLimiteTerminos}.");
-            Console.WriteLine();
-
-            bool continuar = true;
-            while (continuar)
-            {
-                Console.Write("Ingrese la cantidad de términos n (>= 0): ");
-                string? input = Console.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(input))
-                {
-                    Console.WriteLine("Error: La entrada no puede estar vacía. Intente nuevamente.\n");
-                    continue;
-                }
-
-                if (!ValidarYMostrar(input.Trim()))
-                {
-                    Console.WriteLine("Por favor, ingrese un valor válido.\n");
-                    continue;
-                }
-
-                Console.Write("\n¿Desea generar otra serie? (s/n): ");
-                string? resp = Console.ReadLine();
-                if (resp == null || !resp.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
-                {
-                    continuar = false;
-                }
-                Console.WriteLine();
-            }
-
-            Console.WriteLine("Programa finalizado. ¡Hasta luego!");
+            MessageBox.Show(this, $"Ingresa una cantidad entera entre 0 y {FibonacciRecursivo.MaxLimiteTerminos}.", "Entrada inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            entrada.Focus();
+            return;
         }
 
-        public static bool ValidarYMostrar(string input)
-        {
-            // Rechazar decimales y fracciones
-            if (input.Contains('.') || input.Contains(',') || input.Contains('/'))
-            {
-                Console.WriteLine("Error: No se permiten fracciones ni números decimales. Debe ingresar un número entero.");
-                return false;
-            }
-
-            // Validar que sea entero
-            if (!int.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out int n))
-            {
-                Console.WriteLine("Error: La entrada no es un número entero válido.");
-                return false;
-            }
-
-            // Validar no negatividad
-            if (n < 0)
-            {
-                Console.WriteLine($"Error: La cantidad de términos ({n}) no puede ser negativa.");
-                return false;
-            }
-
-            // Validar límite máximo
-            if (n > FibonacciRecursivo.MaxLimiteTerminos)
-            {
-                Console.WriteLine($"Error: La cantidad ({n}) excede el límite máximo seguro ({FibonacciRecursivo.MaxLimiteTerminos}).");
-                return false;
-            }
-
-            try
-            {
-                List<BigInteger> serie = FibonacciRecursivo.ObtenerSerie(n);
-                Console.WriteLine($"Cantidad de términos solicitada: {n}");
-                if (n == 0)
-                {
-                    Console.WriteLine("Serie generada: (vacía, 0 términos)");
-                }
-                else
-                {
-                    Console.WriteLine($"Serie generada: {string.Join(", ", serie)}");
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error durante el cálculo: {ex.Message}");
-                return false;
-            }
-        }
-
-        private static void ProcesarEntrada(string input)
-        {
-            ValidarYMostrar(input);
-        }
+        var serie = FibonacciRecursivo.ObtenerSerie(n);
+        resultado.Text = n == 0
+            ? "Serie vacía (0 términos)."
+            : $"F(0) = 0, F(1) = 1\r\n\r\n{string.Join(", ", serie)}";
     }
 }

@@ -4,9 +4,10 @@ Implementa únicamente el ejercicio 1 del documento `Practica2-Recursividad 0320
 
 ## Entrega y estructura
 
-- Usa C# y crea un proyecto de consola independiente dentro de `Practica_01_Factorial/`. No dependas de otras prácticas.
+- Usa C# WinForms y crea una aplicación gráfica independiente dentro de `Practica_01_Factorial/`. No dependas de otras prácticas.
 - Entrega el código fuente visible (`.cs` y `.csproj`), un `README.md` con instrucciones de compilación y uso, y un ejecutable Windows `.exe` generado mediante `dotnet publish` para `win-x64` en `publish/`.
-- Coloca la interacción de consola en `Program.cs` y toda la lógica de factorial en una clase separada llamada `FactorialRecursivo`, en `FactorialRecursivo.cs`. `Program.cs` debe llamar a esa clase.
+- Coloca el formulario y la validación en `Program.cs` y toda la lógica de factorial en una clase separada llamada `FactorialRecursivo`, en `FactorialRecursivo.cs`. El formulario debe llamar a esa clase.
+- La ventana debe tener apariencia Cupertino: fondo claro, espacios amplios, tarjetas blancas y controles redondeados. Usa Roboto e iconos Material Design integrados para que funcionen sin fuentes instaladas.
 - El cálculo del factorial debe ser realmente recursivo: casos base para 0 y 1; paso recursivo `n * Factorial(n - 1)`. No sustituyas ese cálculo por un bucle ni por una función de biblioteca.
 
 ## Comportamiento

@@ -4,9 +4,10 @@ Implementa únicamente el ejercicio 2 del documento `Practica2-Recursividad 0320
 
 ## Entrega y estructura
 
-- Usa C# y crea un proyecto de consola independiente dentro de `Practica_02_Fibonacci/`. No dependas de otras prácticas.
+- Usa C# WinForms y crea una aplicación gráfica independiente dentro de `Practica_02_Fibonacci/`. No dependas de otras prácticas.
 - Entrega el código fuente visible (`.cs` y `.csproj`), un `README.md` con instrucciones de compilación y uso, y un ejecutable Windows `.exe` generado mediante `dotnet publish` para `win-x64` en `publish/`.
-- Coloca la interacción de consola en `Program.cs` y toda la lógica recursiva en una clase separada llamada `FibonacciRecursivo`, en `FibonacciRecursivo.cs`.
+- Coloca el formulario y la validación en `Program.cs` y toda la lógica recursiva en una clase separada llamada `FibonacciRecursivo`, en `FibonacciRecursivo.cs`.
+- La ventana debe tener apariencia Cupertino: fondo claro, espacios amplios, tarjetas blancas y controles redondeados. Usa Roboto e iconos Material Design integrados para que funcionen sin fuentes instaladas.
 
 ## Comportamiento
 

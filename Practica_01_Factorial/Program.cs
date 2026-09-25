@@ -1,109 +1,71 @@
-using System;
 using System.Globalization;
-using System.Numerics;
+using System.Windows.Forms;
 
-namespace Practica_01_Factorial
+namespace Practica_01_Factorial;
+
+internal static class Program
 {
-    public class Program
+    [STAThread]
+    private static void Main()
     {
-        public static void Main(string[] args)
+        ApplicationConfiguration.Initialize();
+        Application.Run(new MainForm());
+    }
+}
+
+public sealed class MainForm : Form
+{
+    private readonly TextBox entrada = new() { Width = 180 };
+    private readonly TextBox resultado = new()
+    {
+        Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical,
+        Dock = DockStyle.Fill, Font = new Font("Consolas", 11)
+    };
+
+    public MainForm()
+    {
+        Text = "Práctica 1 - Factorial recursivo";
+        MinimumSize = new Size(650, 400);
+        Size = new Size(850, 580);
+        StartPosition = FormStartPosition.CenterScreen;
+
+        var panel = new TableLayoutPanel
         {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Dock = DockStyle.Fill, Padding = new Padding(20), ColumnCount = 2, RowCount = 4
+        };
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-            // Si se pasa un argumento por línea de comandos, procesarlo directamente (modo batch/prueba)
-            if (args.Length > 0)
-            {
-                ProcesarEntrada(args[0]);
-                return;
-            }
+        var titulo = new Label { Text = "Factorial mediante recursividad", AutoSize = true, Font = new Font("Segoe UI", 17, FontStyle.Bold), Margin = new Padding(0, 0, 0, 18) };
+        panel.Controls.Add(titulo, 0, 0);
+        panel.SetColumnSpan(titulo, 2);
+        panel.Controls.Add(new Label { Text = $"Número entero (0 a {FactorialRecursivo.MaxLimiteSeguro}):", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 1);
+        panel.Controls.Add(entrada, 1, 1);
+        var calcular = new CupertinoButton { Text = "Calcular factorial", AutoSize = true, Margin = new Padding(0, 16, 0, 16) };
+        calcular.Click += Calcular;
+        panel.Controls.Add(calcular, 0, 2);
+        panel.SetColumnSpan(calcular, 2);
+        panel.Controls.Add(resultado, 0, 3);
+        panel.SetColumnSpan(resultado, 2);
+        Controls.Add(panel);
+        CupertinoTheme.Aplicar(this, "\uea5f"); // Material Symbols: calculate
+        AcceptButton = calcular;
+    }
 
-            // Modo interactivo
-            Console.WriteLine("==================================================");
-            Console.WriteLine("  PRÁCTICA 1: CÁLCULO DE FACTORIAL (RECURSIVO)    ");
-            Console.WriteLine("==================================================");
-            Console.WriteLine($"Calcula n! mediante recursión pura (0 <= n <= {FactorialRecursivo.MaxLimiteSeguro}).");
-            Console.WriteLine();
-
-            bool continuar = true;
-            while (continuar)
-            {
-                Console.Write("Ingrese un número entero n (>= 0): ");
-                string? input = Console.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(input))
-                {
-                    Console.WriteLine("Error: La entrada no puede estar vacía. Intente nuevamente.\n");
-                    continue;
-                }
-
-                if (!ValidarYCalcular(input.Trim(), out _))
-                {
-                    Console.WriteLine("Por favor, ingrese un valor válido.\n");
-                    continue;
-                }
-
-                Console.Write("\n¿Desea calcular otro número? (s/n): ");
-                string? resp = Console.ReadLine();
-                if (resp == null || !resp.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
-                {
-                    continuar = false;
-                }
-                Console.WriteLine();
-            }
-
-            Console.WriteLine("Programa finalizado. ¡Hasta luego!");
+    private void Calcular(object? sender, EventArgs e)
+    {
+        if (!int.TryParse(entrada.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int n)
+            || n < 0 || n > FactorialRecursivo.MaxLimiteSeguro)
+        {
+            MessageBox.Show(this, $"Ingresa un número entero entre 0 y {FactorialRecursivo.MaxLimiteSeguro}.", "Entrada inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            entrada.Focus();
+            return;
         }
 
-        public static bool ValidarYCalcular(string input, out BigInteger resultado)
-        {
-            resultado = BigInteger.Zero;
-
-            // Detectar si ingresó una fracción o decimal
-            if (input.Contains('.') || input.Contains(',') || input.Contains('/'))
-            {
-                Console.WriteLine("Error: No se admiten fracciones ni números decimales. Debe ser un entero.");
-                return false;
-            }
-
-            // Verificar si es un entero válido
-            if (!int.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out int n))
-            {
-                Console.WriteLine("Error: La entrada no es un número entero válido.");
-                return false;
-            }
-
-            // Validar no negatividad
-            if (n < 0)
-            {
-                Console.WriteLine($"Error: El número ({n}) es negativo. El factorial solo está definido para n >= 0.");
-                return false;
-            }
-
-            // Validar límite seguro
-            if (n > FactorialRecursivo.MaxLimiteSeguro)
-            {
-                Console.WriteLine($"Error: El número ({n}) excede el límite máximo seguro de {FactorialRecursivo.MaxLimiteSeguro}.");
-                return false;
-            }
-
-            // Calcular recursivamente
-            try
-            {
-                resultado = FactorialRecursivo.Calcular(n);
-                Console.WriteLine($"Operación: {n}!");
-                Console.WriteLine($"Resultado: {n}! = {resultado}");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error durante el cálculo: {ex.Message}");
-                return false;
-            }
-        }
-
-        private static void ProcesarEntrada(string input)
-        {
-            ValidarYCalcular(input, out _);
-        }
+        resultado.Text = $"{n}! = {FactorialRecursivo.Calcular(n)}";
     }
 }

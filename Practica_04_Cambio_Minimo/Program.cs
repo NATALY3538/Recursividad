@@ -1,176 +1,111 @@
-using System;
 using System.Globalization;
+using System.Text;
+using System.Windows.Forms;
 
-namespace Practica_04_Cambio_Minimo
+namespace Practica_04_Cambio_Minimo;
+
+internal static class Program
 {
-    public class Program
+    [STAThread]
+    private static void Main()
     {
-        public static void Main(string[] args)
+        ApplicationConfiguration.Initialize();
+        Application.Run(new MainForm());
+    }
+}
+
+public sealed class MainForm : Form
+{
+    private readonly TextBox entradaPrecio = new() { Width = 180 };
+    private readonly TextBox entradaPago = new() { Width = 180 };
+    private readonly TextBox resultado = new()
+    {
+        Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical,
+        Dock = DockStyle.Fill, Font = new Font("Consolas", 11)
+    };
+
+    public MainForm()
+    {
+        Text = "Práctica 4 - Cambio mínimo de monedas";
+        MinimumSize = new Size(720, 560);
+        Size = new Size(880, 700);
+        StartPosition = FormStartPosition.CenterScreen;
+
+        var panel = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20), ColumnCount = 2, RowCount = 6 };
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        for (int i = 0; i < 5; i++) panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+        var titulo = new Label { Text = "Cambio con el mínimo de monedas", AutoSize = true, Font = new Font("Segoe UI", 17, FontStyle.Bold), Margin = new Padding(0, 0, 0, 10) };
+        panel.Controls.Add(titulo, 0, 0);
+        panel.SetColumnSpan(titulo, 2);
+        var ayuda = new Label { Text = "Importes en pesos; usa punto o coma decimal, máximo dos cifras. Cambio máximo: $10,000.00.", AutoSize = true, Margin = new Padding(0, 0, 0, 14) };
+        panel.Controls.Add(ayuda, 0, 1);
+        panel.SetColumnSpan(ayuda, 2);
+        panel.Controls.Add(new Label { Text = "Precio de compra ($):", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 2);
+        panel.Controls.Add(entradaPrecio, 1, 2);
+        panel.Controls.Add(new Label { Text = "Pago recibido ($):", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 3);
+        panel.Controls.Add(entradaPago, 1, 3);
+        var calcular = new CupertinoButton { Text = "Calcular cambio", AutoSize = true, Margin = new Padding(0, 16, 0, 16) };
+        calcular.Click += Calcular;
+        panel.Controls.Add(calcular, 0, 4);
+        panel.SetColumnSpan(calcular, 2);
+        panel.Controls.Add(resultado, 0, 5);
+        panel.SetColumnSpan(resultado, 2);
+        Controls.Add(panel);
+        CupertinoTheme.Aplicar(this, "\uef63"); // Material Symbols: payments
+        AcceptButton = calcular;
+    }
+
+    private static bool IntentarLeerMonto(string texto, out decimal monto)
+    {
+        string normalizado = texto.Trim().Replace(',', '.');
+        monto = 0m;
+        if (normalizado.Length == 0 || normalizado.Count(c => c == '.') > 1)
+            return false;
+        int punto = normalizado.IndexOf('.');
+        if (punto >= 0 && normalizado.Length - punto - 1 > 2)
+            return false;
+        return decimal.TryParse(normalizado,
+            NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign,
+            CultureInfo.InvariantCulture, out monto) && monto >= 0m;
+    }
+
+    private void Calcular(object? sender, EventArgs e)
+    {
+        if (!IntentarLeerMonto(entradaPrecio.Text, out decimal precio)
+            || !IntentarLeerMonto(entradaPago.Text, out decimal pago))
         {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-            if (args.Length >= 2)
-            {
-                ProcesarEntrada(args[0], args[1]);
-                return;
-            }
-
-            Console.WriteLine("==================================================");
-            Console.WriteLine("  PRÁCTICA 4: CAMBIO MÍNIMO DE MONEDAS (RECURSIVO)");
-            Console.WriteLine("==================================================");
-            Console.WriteLine("Calcula el cambio devolviendo el mínimo número de piezas (monedas).");
-            Console.WriteLine($"Denominaciones: $100, $50, $20, $10, $5, $1, 50¢, 20¢, 1¢.");
-            Console.WriteLine($"Límite máximo de cambio: ${CambioMinimoRecursivo.MaxCambioPesos:F2} MXN.");
-            Console.WriteLine();
-
-            bool continuar = true;
-            while (continuar)
-            {
-                decimal precio = SolicitarMonto("Ingrese el total o precio de compra ($): ");
-                decimal pago;
-
-                while (true)
-                {
-                    pago = SolicitarMonto("Ingrese el pago recibido ($): ");
-                    if (pago < precio)
-                    {
-                        Console.WriteLine($"Error: El pago (${pago:F2}) es menor al precio (${precio:F2}). Ingrese un pago suficiente.\n");
-                        continue;
-                    }
-                    break;
-                }
-
-                if (ValidarYEjecutar(precio, pago, out ResultadoCambio? resultado) && resultado != null)
-                {
-                    ImprimirResultado(resultado);
-                }
-
-                Console.Write("\n¿Desea realizar otro cálculo? (s/n): ");
-                string? resp = Console.ReadLine();
-                if (resp == null || !resp.Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
-                {
-                    continuar = false;
-                }
-                Console.WriteLine();
-            }
-
-            Console.WriteLine("Programa finalizado. ¡Hasta luego!");
+            MessageBox.Show(this, "Ingresa importes no negativos con máximo dos decimales.", "Entrada inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+        if (pago < precio)
+        {
+            MessageBox.Show(this, "El pago debe ser igual o mayor que el precio.", "Pago insuficiente", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
         }
 
-        private static decimal SolicitarMonto(string prompt)
+        try
         {
-            while (true)
-            {
-                Console.Write(prompt);
-                string? input = Console.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(input))
-                {
-                    Console.WriteLine("Error: La entrada no puede estar vacía. Intente de nuevo.");
-                    continue;
-                }
-
-                if (ParsearMonto(input.Trim(), out decimal monto, out string errorMsg))
-                {
-                    return monto;
-                }
-
-                Console.WriteLine($"Error: {errorMsg}");
-            }
+            ResultadoCambio cambio = CambioMinimoRecursivo.CalcularCambio(precio, pago);
+            var texto = new StringBuilder();
+            texto.AppendLine($"Precio: ${precio:F2}   Pago: ${pago:F2}");
+            texto.AppendLine($"Cambio: ${cambio.CambioTotal:F2}");
+            texto.AppendLine();
+            foreach (var moneda in cambio.Detalle)
+                texto.AppendLine($"{moneda.CantidadMonedas,4} × {moneda.Descripcion}");
+            texto.AppendLine();
+            texto.AppendLine($"Total de monedas: {cambio.TotalMonedas}");
+            resultado.Text = texto.ToString();
         }
-
-        public static bool ParsearMonto(string input, out decimal monto, out string errorMsg)
+        catch (ArgumentException ex)
         {
-            monto = 0m;
-            errorMsg = string.Empty;
-
-            // Reemplazar coma por punto para admitir ambos separadores decimales
-            string normalizada = input.Replace(',', '.');
-
-            // Verificar caracteres válidos
-            if (!decimal.TryParse(normalizada, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out decimal valor))
-            {
-                errorMsg = "La entrada no es una cantidad numérica válida.";
-                return false;
-            }
-
-            if (valor < 0)
-            {
-                errorMsg = "La cantidad no puede ser negativa.";
-                return false;
-            }
-
-            // Validar que no tenga más de 2 decimales
-            int idxPunto = normalizada.IndexOf('.');
-            if (idxPunto >= 0)
-            {
-                int decimales = normalizada.Length - idxPunto - 1;
-                if (decimales > 2)
-                {
-                    errorMsg = $"La cantidad tiene {decimales} decimales. Solo se permiten hasta 2 decimales (centavos).";
-                    return false;
-                }
-            }
-
-            monto = valor;
-            return true;
+            MessageBox.Show(this, ex.Message, "Entrada inválida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
-
-        public static bool ValidarYEjecutar(decimal precio, decimal pago, out ResultadoCambio? resultado)
+        catch (InvalidOperationException ex)
         {
-            resultado = null;
-            try
-            {
-                resultado = CambioMinimoRecursivo.CalcularCambio(precio, pago);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                return false;
-            }
-        }
-
-        public static void ImprimirResultado(ResultadoCambio res)
-        {
-            Console.WriteLine("\n================== DESGLOSE DE CAMBIO ==================");
-            Console.WriteLine($"Total compra:  ${res.Precio:F2}");
-            Console.WriteLine($"Pago recibido: ${res.Pago:F2}");
-            Console.WriteLine($"Cambio vuelto: ${res.CambioTotal:F2}");
-            Console.WriteLine("Monedas a entregar (mínimo número de piezas):");
-            foreach (var d in res.Detalle)
-            {
-                string palabraMoneda = d.CantidadMonedas == 1 ? "moneda" : "monedas";
-                Console.WriteLine($"  ▪ {d.CantidadMonedas} {palabraMoneda} de {d.Descripcion}");
-            }
-            Console.WriteLine($"Total de monedas: {res.TotalMonedas}");
-            Console.WriteLine("========================================================\n");
-        }
-
-        private static void ProcesarEntrada(string strPrecio, string strPago)
-        {
-            if (!ParsearMonto(strPrecio, out decimal precio, out string errPrecio))
-            {
-                Console.WriteLine($"Error en precio: {errPrecio}");
-                return;
-            }
-
-            if (!ParsearMonto(strPago, out decimal pago, out string errPago))
-            {
-                Console.WriteLine($"Error en pago: {errPago}");
-                return;
-            }
-
-            if (pago < precio)
-            {
-                Console.WriteLine($"Error: El pago (${pago:F2}) es menor al precio (${precio:F2}). Pago insuficiente.");
-                return;
-            }
-
-            if (ValidarYEjecutar(precio, pago, out ResultadoCambio? resultado) && resultado != null)
-            {
-                ImprimirResultado(resultado);
-            }
+            MessageBox.Show(this, ex.Message, "No se pudo calcular", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

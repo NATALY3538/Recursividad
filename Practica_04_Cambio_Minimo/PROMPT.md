@@ -4,9 +4,10 @@ Implementa únicamente el ejercicio 4 del documento `Practica2-Recursividad 0320
 
 ## Entrega y estructura
 
-- Crea un proyecto de consola C# independiente dentro de `Practica_04_Cambio_Minimo/`. No dependas de otras prácticas.
+- Crea una aplicación gráfica C# WinForms independiente dentro de `Practica_04_Cambio_Minimo/`. No dependas de otras prácticas.
 - Entrega el código fuente visible (`.cs` y `.csproj`), un `README.md` con instrucciones de compilación y uso, y un ejecutable Windows `.exe` generado mediante `dotnet publish` para `win-x64` en `publish/`.
-- Coloca lectura y presentación de datos en `Program.cs`. Coloca el algoritmo recursivo de cambio en una clase separada llamada `CambioMinimoRecursivo`, en `CambioMinimoRecursivo.cs`. Puedes agregar un tipo de resultado si ayuda a mantener el código claro.
+- Coloca el formulario, la validación y la presentación de datos en `Program.cs`. Coloca el algoritmo recursivo de cambio en una clase separada llamada `CambioMinimoRecursivo`, en `CambioMinimoRecursivo.cs`. Puedes agregar un tipo de resultado si ayuda a mantener el código claro.
+- La ventana debe tener apariencia Cupertino: fondo claro, espacios amplios, tarjetas blancas y controles redondeados. Usa Roboto e iconos Material Design integrados para que funcionen sin fuentes instaladas.
 
 ## Comportamiento
 

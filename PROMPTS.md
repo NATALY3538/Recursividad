@@ -10,4 +10,4 @@ Fuente: `Practica2-Recursividad 032026.pdf`, páginas 1 y 2. Cada carpeta contie
 | 4 | [Cambio mínimo](Practica_04_Cambio_Minimo/PROMPT.md) | Cambio con el menor número de monedas. |
 | 5 | [Torres de Hanói](Practica_05_Torres_Hanoi/PROMPT.md) | Describir movimientos para trasladar los discos. |
 
-Los prompts piden un proyecto C# independiente por carpeta, código fuente legible, lógica recursiva en una clase aparte y un `.exe` de consola para Windows. El archivo PDF solicita expresamente recursividad en los ejercicios 1, 2 y 5; se aplica también a los ejercicios 3 y 4 por el requisito de esta entrega.
+Los prompts piden un proyecto C# independiente por carpeta, código fuente legible, lógica recursiva en una clase aparte y una aplicación gráfica `.exe` para Windows. El diseño usa apariencia Cupertino, tipografía Roboto e iconos Material Design integrados. El archivo PDF solicita expresamente recursividad en los ejercicios 1, 2 y 5; se aplica también a los ejercicios 3 y 4 por el requisito de esta entrega.
