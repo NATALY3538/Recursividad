@@ -1,0 +1,13 @@
+# Visual Studio & .NET build artifacts
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# Keep publish directory for executables
+!**/publish/
+!**/publish/**
+
+# Exclude symbol files
+*.pdb
